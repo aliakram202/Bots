@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ven-001",
+    "name": "Al-Mutanabbi Street Cultural Center",
+    "location": { "lat": 33.3218, "lng": 44.3638 },
+    "region": "arab",
+    "description": "Historic center for literature and culture in Baghdad",
+    "website": "https://mutanabbi.example.com"
+  },
+  {
+    "id": "ven-002",
+    "name": "Jordan National Gallery of Fine Arts",
+    "location": { "lat": 31.9454, "lng": 35.9284 },
+    "region": "arab",
+    "description": "Major art museum in Amman showcasing Arab and international art",
+    "website": "https://jngfa.org.jo"
+  },
+  {
+    "id": "ven-003",
+    "name": "Beirut National Museum",
+    "location": { "lat": 33.8724, "lng": 35.5037 },
+    "region": "arab",
+    "description": "Repository of Lebanese heritage and Islamic art",
+    "website": "https://beirut-national.example.com"
+  },
+  {
+    "id": "ven-004",
+    "name": "Damascus National Museum",
+    "location": { "lat": 33.5138, "lng": 36.2765 },
+    "region": "arab",
+    "description": "Showcasing Syrian archaeological and artistic treasures",
+    "website": "https://damascus-museum.example.com"
+  },
+  {
+    "id": "ven-005",
+    "name": "Egyptian Museum Cairo",
+    "location": { "lat": 30.0505, "lng": 31.2349 },
+    "region": "arab",
+    "description": "One of the world's largest collections of ancient Egyptian art",
+    "website": "https://egyptianmuseum.gov.eg"
+  },
+  {
+    "id": "ven-006",
+    "name": "Sheikh Zayed National Museum",
+    "location": { "lat": 24.4539, "lng": 54.3773 },
+    "region": "arab",
+    "description": "Museum of Emirati heritage and Islamic art in Abu Dhabi",
+    "website": "https://sheikhzayedmuseum.ae"
+  },
+  {
+    "id": "ven-007",
+    "name": "Doha Cultural Village",
+    "location": { "lat": 25.2854, "lng": 51.5310 },
+    "region": "arab",
+    "description": "Complex showcasing traditional and modern Qatari culture",
+    "website": "https://doha-cultural.example.com"
+  },
+  {
+    "id": "ven-008",
+    "name": "Marrakech Museum of Contemporary Art",
+    "location": { "lat": 31.6295, "lng": -8.0075 },
+    "region": "arab",
+    "description": "Leading contemporary art venue in Morocco",
+    "website": "https://marrakech-moca.example.com"
+  },
+  {
+    "id": "ven-009",
+    "name": "The Louvre",
+    "location": { "lat": 48.8613, "lng": 2.3352 },
+    "region": "international",
+    "description": "World's largest art museum with significant Iraqi and Mesopotamian collection",
+    "website": "https://louvre.fr"
+  },
+  {
+    "id": "ven-010",
+    "name": "MoMA New York",
+    "location": { "lat": 40.7614, "lng": -73.9776 },
+    "region": "international",
+    "description": "Leading modern and contemporary art museum",
+    "website": "https://moma.org"
+  },
+  {
+    "id": "ven-011",
+    "name": "British Museum",
+    "location": { "lat": 51.5194, "lng": -0.1270 },
+    "region": "international",
+    "description": "World history museum with extensive Assyrian and Iraqi artifacts collection",
+    "website": "https://britishmuseum.org"
+  },
+  {
+    "id": "ven-012",
+    "name": "Tate Modern",
+    "location": { "lat": 51.5076, "lng": -0.0994 },
+    "region": "international",
+    "description": "Contemporary art museum featuring Arab and Middle Eastern artists",
+    "website": "https://tate.org.uk"
+  }
+]
