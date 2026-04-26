@@ -1,7 +1,7 @@
 // Location message handler
 
-const searchService = require("../utils/searchService");
-const { formatEventsList, formatVenuesList } = require("../utils/formatter");
+const searchService = require("../../utils/searchService");
+const { formatEventsList, formatVenuesList } = require("../../utils/formatter");
 
 /**
  * Handles location messages from users

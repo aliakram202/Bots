@@ -1,11 +1,11 @@
 // Text message handler
 
-const { detectIntent } = require("../utils/intentDetector");
-const searchService = require("../utils/searchService");
+const { detectIntent } = require("../../utils/intentDetector");
+const searchService = require("../../utils/searchService");
 const {
   formatEventsGrouped,
   formatEventsList
-} = require("../utils/formatter");
+} = require("../../utils/formatter");
 
 const WELCOME_MSG = `👋 Hi! I'm your art assistant — with a deep love for *Arabic and Iraqi art* 🌟
 
