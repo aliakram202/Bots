@@ -1,4 +1,4 @@
-# 🎨 Zainab Art Assistant
+# 🎨 Salasil Bot
 
 A WhatsApp bot that helps discover art events, museums, and cultural activities with a deep focus on **Iraqi & Arab art**, while providing global coverage.
 
@@ -172,4 +172,4 @@ MIT
 
 ---
 
-Made with ❤️ for Zainab
+Made with ❤️ by Salasil

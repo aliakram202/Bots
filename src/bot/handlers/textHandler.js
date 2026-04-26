@@ -7,7 +7,7 @@ const {
   formatEventsList
 } = require("../../utils/formatter");
 
-const WELCOME_MSG = `👋 Hi! I'm your art assistant — with a deep love for *Arabic and Iraqi art* 🌟
+const WELCOME_MSG = `👋 Hi! I'm *Salasil Bot* — with a deep love for *Arabic and Iraqi art* 🌟
 
 I help you discover:
 🎨 *Art & Galleries* - Exhibitions, museums, installations

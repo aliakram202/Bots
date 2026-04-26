@@ -22,7 +22,7 @@ client.on("qr", qr => {
 
 // Ready event
 client.on("ready", () => {
-  console.log("✅ 🎨 Zainab Art Assistant is ready!");
+  console.log("✅ 🎨 Salasil Bot is ready!");
 });
 
 // Authentication
@@ -83,4 +83,4 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-console.log("🚀 Zainab Art Assistant starting...");
+console.log("🚀 Salasil Bot starting...");

@@ -1,7 +1,7 @@
 {
-  "name": "zainab-whatsapp-bot",
+  "name": "salasil-bot",
   "version": "1.0.0",
-  "description": "WhatsApp art assistant with deep Iraqi & Arab focus — for Zainab",
+  "description": "WhatsApp art assistant with deep Iraqi & Arab focus",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
