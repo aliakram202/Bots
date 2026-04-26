@@ -1,86 +1,27 @@
-// Main bot entry point
-const { Client, LocalAuth } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+require("dotenv").config();
+
+const { Telegraf } = require("telegraf");
 const { handleText } = require("./bot/handlers/textHandler");
 const { handleLocation } = require("./bot/handlers/locationHandler");
 const { handleMedia } = require("./bot/handlers/mediaHandler");
-const { handleError, handleMessageError } = require("./bot/handlers/errorHandler");
+const { handleError } = require("./bot/handlers/errorHandler");
 
-// Initialize WhatsApp client
-const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  }
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+
+bot.start(ctx => handleText(ctx));
+bot.on("text", ctx => handleText(ctx));
+bot.on("location", ctx => handleLocation(ctx));
+bot.on(["photo", "video", "audio", "voice", "document"], ctx => handleMedia(ctx));
+
+bot.catch((error, ctx) => {
+  handleError(error, `Update ${ctx.updateType}`);
 });
 
-// QR code generation
-client.on("qr", qr => {
-  console.log("\n📱 Scan this QR code with WhatsApp:");
-  qrcode.generate(qr, { small: true });
-});
-
-// Ready event
-client.on("ready", () => {
+bot.launch().then(() => {
   console.log("✅ 🎨 Salasil Bot is ready!");
 });
 
-// Authentication
-client.on("authenticated", () => {
-  console.log("✅ Authenticated successfully!");
-});
-
-// Message handler - routes to specific handlers
-client.on("message", async msg => {
-  try {
-    // Skip group messages and bot's own messages
-    if (msg.from.includes("@g.us")) {
-      return;
-    }
-
-    // Route by message type
-    if (msg.hasLocation) {
-      await handleLocation(msg, client);
-    } else if (msg.type === "ptt" || msg.type.includes("audio")) {
-      // Audio handling
-      await msg.reply("🎙️ Voice messages aren't supported yet, but I'm learning!");
-    } else if (
-      msg.type.includes("image") ||
-      msg.type.includes("video") ||
-      msg.type.includes("media")
-    ) {
-      // Media handling
-      await handleMedia(msg, client);
-    } else if (msg.body) {
-      // Text handling
-      await handleText(msg, client);
-    }
-  } catch (error) {
-    await handleMessageError(msg, error);
-  }
-});
-
-// Connection lost
-client.on("disconnected", reason => {
-  console.log("❌ Disconnected:", reason);
-});
-
-// Error handling
-client.on("error", error => {
-  handleError(error, "Client");
-});
-
-// Initialize
-client.initialize().catch(error => {
-  handleError(error, "Initialization");
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-  console.log("\n📴 Shutting down gracefully...");
-  client.destroy();
-  process.exit(0);
-});
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
 console.log("🚀 Salasil Bot starting...");
