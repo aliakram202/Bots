@@ -206,7 +206,8 @@
     "description": "Premier international contemporary art exhibition",
     "opening_times": "10:00-18:00",
     "website": "https://labiennale.org",
-    "free": false
+    "free": false,
+    "ticket_link": "https://labiennale.org/tickets"
   },
   {
     "id": "evt-020",
@@ -217,7 +218,8 @@
     "description": "Global contemporary art fair in Switzerland",
     "opening_times": "11:00-19:00",
     "website": "https://artbasel.com",
-    "free": false
+    "free": false,
+    "ticket_link": "https://artbasel.com/tickets"
   },
   {
     "id": "evt-021",
@@ -228,7 +230,8 @@
     "description": "Leading international contemporary art fair in London",
     "opening_times": "10:00-18:00",
     "website": "https://frieze.com",
-    "free": false
+    "free": false,
+    "ticket_link": "https://frieze.com/tickets"
   },
   {
     "id": "evt-022",
@@ -250,7 +253,8 @@
     "description": "Annual exhibition of award-winning photojournalism",
     "opening_times": "10:00-18:00",
     "website": "https://worldpressphoto.org",
-    "free": false
+    "free": false,
+    "ticket_link": "https://worldpressphoto.org/tickets"
   },
   {
     "id": "evt-024",
@@ -261,6 +265,43 @@
     "description": "Premier international film festival",
     "opening_times": "09:00-23:00",
     "website": "https://cannesfilmfestival.com",
-    "free": false
+    "free": false,
+    "ticket_link": "https://cannesfilmfestival.com/tickets"
+  },
+  {
+    "id": "evt-025",
+    "name": "National Theatre of Iraq",
+    "category": "theatre",
+    "location": { "lat": 33.3408, "lng": 44.4009 },
+    "region": "arab",
+    "description": "Classic and contemporary Iraqi drama performances",
+    "opening_times": "18:00-22:00",
+    "website": "https://iraq-theatre.example.com",
+    "free": false,
+    "ticket_link": "https://iraq-theatre.example.com/tickets"
+  },
+  {
+    "id": "evt-026",
+    "name": "Cairo Opera House – Al-Hanager Arts Centre",
+    "category": "theatre",
+    "location": { "lat": 30.0440, "lng": 31.2243 },
+    "region": "arab",
+    "description": "Contemporary Arabic theatre and dance performances",
+    "opening_times": "18:00-22:00",
+    "website": "https://cairoopera.org",
+    "free": false,
+    "ticket_link": "https://cairoopera.org/tickets"
+  },
+  {
+    "id": "evt-027",
+    "name": "Globe Theatre Arab World Tour",
+    "category": "theatre",
+    "location": { "lat": 51.5080, "lng": -0.0971 },
+    "region": "international",
+    "description": "Shakespeare's Globe touring productions visiting the Arab world",
+    "opening_times": "19:00-22:30",
+    "website": "https://shakespearesglobe.com",
+    "free": false,
+    "ticket_link": "https://shakespearesglobe.com/tickets"
   }
 ]
