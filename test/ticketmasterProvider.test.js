@@ -43,7 +43,24 @@ test("maps Ticketmaster event data into internal event shape", () => {
   assert.equal(mapped.category, "photography");
   assert.equal(mapped.region, "arab");
   assert.deepEqual(mapped.location, { lat: 33.3152, lng: 44.3661 });
+  assert.equal(mapped.venueName, "National Theatre");
+  assert.equal(mapped.cityName, "Baghdad");
+  assert.equal(mapped.countryCode, "IQ");
+  assert.equal(mapped.startDate, "2026-06-01");
   assert.equal(mapped.source, "ticketmaster");
+});
+
+test("builds Ticketmaster city and date window query parameters", () => {
+  const url = buildUrl("key123", {
+    keyword: "museum exhibition",
+    city: "Braunschweig",
+    startDateTime: "2026-05-12T00:00:00Z",
+    endDateTime: "2026-05-19T23:59:59Z"
+  });
+
+  assert.equal(url.searchParams.get("city"), "Braunschweig");
+  assert.equal(url.searchParams.get("startDateTime"), "2026-05-12T00:00:00Z");
+  assert.equal(url.searchParams.get("endDateTime"), "2026-05-19T23:59:59Z");
 });
 
 test("drops Ticketmaster events without coordinates", () => {

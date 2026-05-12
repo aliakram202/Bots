@@ -3,7 +3,9 @@
 const eventsData = require("../data/events.json");
 const venuesData = require("../data/venues.json");
 const { config } = require("../config");
+const serpApiProvider = require("../providers/serpApiProvider");
 const ticketmasterProvider = require("../providers/ticketmasterProvider");
+const { toTicketmasterDateTime } = require("./stayPeriod");
 
 /**
  * Haversine formula to calculate distance between two coordinates
@@ -26,22 +28,24 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 /**
  * Searches events by category
  */
-async function withLiveFallback(liveSearch, fallbackSearch) {
-  if (!config.ticketmasterApiKey) {
-    return fallbackSearch();
+async function firstProviderResult(searches, fallbackSearch) {
+  for (const search of searches) {
+    if (!search.enabled) continue;
+
+    try {
+      const results = await search.run();
+      if (results.length > 0) return results;
+    } catch (error) {
+      console.warn(`${search.name} event search failed; trying next provider: ${error.message}`);
+    }
   }
 
-  try {
-    const liveResults = await liveSearch();
-    return liveResults.length > 0 ? liveResults : fallbackSearch();
-  } catch (error) {
-    console.warn(`Live event search failed; using local fallback: ${error.message}`);
-    return fallbackSearch();
-  }
+  return fallbackSearch();
 }
 
 function applyFilters(events, options = {}) {
   return events.filter(event => {
+    if (options.category && event.category !== options.category) return false;
     if (options.freeOnly && event.free !== true) return false;
     if (options.ticketedOnly && !event.ticket_link) return false;
     if (options.locationName) {
@@ -57,8 +61,48 @@ function applyFilters(events, options = {}) {
         .toLowerCase();
       if (!haystack.includes(options.locationName.toLowerCase())) return false;
     }
+    if (options.dateWindow && event.startDate) {
+      const eventDate = new Date(event.startDate);
+      if (Number.isNaN(eventDate.getTime())) return true;
+      if (eventDate < options.dateWindow.start || eventDate > options.dateWindow.end) return false;
+    }
     return true;
+  }).map(event => {
+    if (options.dateWindow && !event.startDate && !event.source) {
+      return { ...event, source: "local fallback data" };
+    }
+    return event;
   });
+}
+
+function providerOptions(options = {}) {
+  return {
+    countryCode: config.ticketmasterCountryCode,
+    townName: options.townName,
+    category: options.category,
+    startDateTime: options.dateWindow ? toTicketmasterDateTime(options.dateWindow.start) : undefined,
+    endDateTime: options.dateWindow ? toTicketmasterDateTime(options.dateWindow.end) : undefined
+  };
+}
+
+function liveProviderSearches(category, options, ticketmasterSearch) {
+  const providerOpts = providerOptions(options);
+
+  return [
+    {
+      name: "SerpApi",
+      enabled: Boolean(config.serpApiKey),
+      run: async () => applyFilters(
+        await serpApiProvider.searchByCategory(config.serpApiKey, category, providerOpts),
+        options
+      )
+    },
+    {
+      name: "Ticketmaster",
+      enabled: Boolean(config.ticketmasterApiKey),
+      run: async () => applyFilters(await ticketmasterSearch(providerOpts), options)
+    }
+  ];
 }
 
 function localSearchByCategory(category) {
@@ -66,10 +110,10 @@ function localSearchByCategory(category) {
 }
 
 async function searchByCategory(category, options = {}) {
-  return withLiveFallback(
-    async () => applyFilters(await ticketmasterProvider.searchByCategory(config.ticketmasterApiKey, category, {
-      countryCode: config.ticketmasterCountryCode
-    }), options),
+  return firstProviderResult(
+    liveProviderSearches(category, options, providerOpts =>
+      ticketmasterProvider.searchByCategory(config.ticketmasterApiKey, category, providerOpts)
+    ),
     () => applyFilters(localSearchByCategory(category), options)
   );
 }
@@ -102,10 +146,26 @@ function localSearchNearbyEvents(lat, lng, radiusKm = 100) {
 }
 
 async function searchNearbyEvents(lat, lng, radiusKm = 100, options = {}) {
-  return withLiveFallback(
-    async () => applyFilters(await ticketmasterProvider.searchNearbyEvents(config.ticketmasterApiKey, lat, lng, radiusKm, {
-      countryCode: config.ticketmasterCountryCode
-    }), options),
+  const providerOpts = providerOptions(options);
+  return firstProviderResult(
+    [
+      {
+        name: "SerpApi",
+        enabled: Boolean(config.serpApiKey),
+        run: async () => applyFilters(
+          await serpApiProvider.searchNearbyEvents(config.serpApiKey, lat, lng, radiusKm, providerOpts),
+          options
+        )
+      },
+      {
+        name: "Ticketmaster",
+        enabled: Boolean(config.ticketmasterApiKey),
+        run: async () => applyFilters(
+          await ticketmasterProvider.searchNearbyEvents(config.ticketmasterApiKey, lat, lng, radiusKm, providerOpts),
+          options
+        )
+      }
+    ],
     () => applyFilters(localSearchNearbyEvents(lat, lng, radiusKm), options)
   );
 }
@@ -137,10 +197,26 @@ function localSearchEvents(query, options = {}) {
 }
 
 async function searchEvents(query, options = {}) {
-  return withLiveFallback(
-    async () => applyFilters(await ticketmasterProvider.searchEvents(config.ticketmasterApiKey, query, {
-      countryCode: config.ticketmasterCountryCode
-    }), options),
+  const providerOpts = providerOptions(options);
+  return firstProviderResult(
+    [
+      {
+        name: "SerpApi",
+        enabled: Boolean(config.serpApiKey),
+        run: async () => applyFilters(
+          await serpApiProvider.searchEvents(config.serpApiKey, query, providerOpts),
+          options
+        )
+      },
+      {
+        name: "Ticketmaster",
+        enabled: Boolean(config.ticketmasterApiKey),
+        run: async () => applyFilters(
+          await ticketmasterProvider.searchEvents(config.ticketmasterApiKey, query, providerOpts),
+          options
+        )
+      }
+    ],
     () => localSearchEvents(query, options)
   );
 }
@@ -155,6 +231,34 @@ function searchVenues(query) {
       v.name.toLowerCase().includes(lower) ||
       v.description.toLowerCase().includes(lower)
   );
+}
+
+function searchVenueFallback(options = {}) {
+  if (options.lat && options.lng) {
+    return searchNearbyVenues(options.lat, options.lng, options.radiusKm || 20);
+  }
+
+  const placeQueries = [options.townName, options.locationName]
+    .filter(Boolean)
+    .map(value => String(value).toLowerCase());
+  const categoryQuery = options.category ? String(options.category).toLowerCase() : "";
+
+  if (placeQueries.length === 0 && !categoryQuery) return [];
+
+  return venuesData.filter(venue => {
+    const haystack = [
+      venue.name,
+      venue.description,
+      venue.region,
+      venue.website
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    if (placeQueries.length > 0) {
+      return placeQueries.some(query => haystack.includes(query));
+    }
+
+    return haystack.includes(categoryQuery);
+  });
 }
 
 /**
@@ -201,5 +305,6 @@ module.exports = {
   searchEvents,
   localSearchEvents,
   searchVenues,
+  searchVenueFallback,
   search
 };

@@ -2,16 +2,20 @@
 
 Salasil Bot is a Telegram assistant for discovering art, culture, museums, exhibitions, workshops, cinema, theatre, photography, books, and festivals, with Iraqi and Arab results prioritized when available.
 
-The bot works immediately from the local JSON dataset. If you add a Ticketmaster API key, it can also pull live event results and fall back to local data when the API is unavailable or empty.
+The bot works immediately from the local JSON dataset. For broader discovery, add a SerpApi key for Google Events. Ticketmaster can also stay enabled as a secondary source for ticketed events.
 
 ## Features
 
 - Telegram bot powered by Telegraf
 - English and Arabic keyword intent detection
+- Guided town/location, category, and stay-period flow
 - Compound queries such as `free photography in Baghdad`
 - Location sharing for nearby events and venues within 20km, with a 50km expansion option
 - Inline category buttons for quick discovery
-- Optional Ticketmaster live event search
+- Compact map, ticket, and event links in Telegram replies
+- Optional SerpApi Google Events search as the primary live source
+- Optional Ticketmaster live event search as a secondary source
+- Venue fallback when no dated events are found
 - Safe Telegram HTML formatting for user and provider content
 - Local fallback data in `src/data/events.json` and `src/data/venues.json`
 
@@ -49,7 +53,13 @@ See [BOT_FUNCTIONALITY.md](BOT_FUNCTIONALITY.md) for the full command list, call
 
 ## Optional Live Events
 
-The bot runs without external event APIs. To enable live Ticketmaster results, add this to `.env`:
+The bot runs without external event APIs. To enable broader live event discovery, add SerpApi:
+
+```bash
+SERPAPI_API_KEY=your_serpapi_key_here
+```
+
+Ticketmaster can remain enabled as a secondary provider for ticketed events:
 
 ```bash
 TICKETMASTER_API_KEY=your_ticketmaster_key_here
@@ -57,6 +67,8 @@ TICKETMASTER_COUNTRY_CODE=IQ
 ```
 
 Use the Ticketmaster Developer `Consumer Key` as `TICKETMASTER_API_KEY`. `TICKETMASTER_COUNTRY_CODE` is optional; use a two-letter country code like `IQ`, `JO`, `AE`, `GB`, or `US` to bias results.
+
+Provider order is SerpApi first, Ticketmaster second, then local JSON and local venue fallback.
 
 ## Bot Commands
 
@@ -67,6 +79,8 @@ Use the Ticketmaster Developer `Consumer Key` as `TICKETMASTER_API_KEY`. `TICKET
 
 You can also send natural messages like:
 
+- `Braunschweig`
+- `2 weeks`
 - `modern art exhibitions`
 - `free photography in Baghdad`
 - `museam near me`

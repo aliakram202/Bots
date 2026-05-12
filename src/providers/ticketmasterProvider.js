@@ -54,6 +54,8 @@ function mapEvent(event, fallbackCategory = "art") {
   const venue = getVenue(event);
   const location = getLocation(venue);
   const countryCode = venue?.country?.countryCode;
+  const cityName = venue?.city?.name;
+  const venueName = venue?.name;
 
   if (!location) {
     return null;
@@ -62,13 +64,19 @@ function mapEvent(event, fallbackCategory = "art") {
   const date = event?.dates?.start?.localDate || "";
   const time = event?.dates?.start?.localTime || "";
   const openingTimes = [date, time].filter(Boolean).join(" ") || "See ticket link";
-  const venueParts = [venue?.name, venue?.city?.name, countryCode].filter(Boolean);
+  const venueParts = [venueName, cityName, countryCode].filter(Boolean);
 
   return {
     id: `ticketmaster-${event.id}`,
     name: event.name,
     category: categoryFromEvent(event, fallbackCategory),
     location,
+    locationText: venueParts.join(", "),
+    startDate: date,
+    startDateTime: event?.dates?.start?.dateTime || openingTimes,
+    venueName,
+    cityName,
+    countryCode,
     region: ARAB_COUNTRY_CODES.has(countryCode) ? "arab" : "international",
     description: venueParts.length > 0 ? venueParts.join(", ") : "Live event from Ticketmaster",
     opening_times: openingTimes,
@@ -114,23 +122,32 @@ async function fetchEvents(apiKey, params, fallbackCategory) {
 async function searchByCategory(apiKey, category, options = {}) {
   return fetchEvents(apiKey, {
     keyword: CATEGORY_KEYWORDS[category] || category,
-    countryCode: options.countryCode
+    city: options.townName,
+    countryCode: options.countryCode,
+    startDateTime: options.startDateTime,
+    endDateTime: options.endDateTime
   }, category);
 }
 
 async function searchEvents(apiKey, query, options = {}) {
   return fetchEvents(apiKey, {
     keyword: query,
-    countryCode: options.countryCode
+    city: options.townName,
+    countryCode: options.countryCode,
+    startDateTime: options.startDateTime,
+    endDateTime: options.endDateTime
   }, "art");
 }
 
 async function searchNearbyEvents(apiKey, lat, lng, radiusKm = 100, options = {}) {
   return fetchEvents(apiKey, {
+    keyword: options.category ? CATEGORY_KEYWORDS[options.category] || options.category : undefined,
     geoPoint: geohash.encode(Number(lat), Number(lng), 9),
     radius: radiusKm,
     unit: "km",
     countryCode: options.countryCode,
+    startDateTime: options.startDateTime,
+    endDateTime: options.endDateTime,
     sort: "distance,asc"
   }, "art");
 }

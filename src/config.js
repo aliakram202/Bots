@@ -17,7 +17,9 @@ const config = {
   telegramBotToken: required("TELEGRAM_BOT_TOKEN"),
   botName: optional("BOT_NAME", "Salasil Bot"),
   debug: optional("DEBUG", "false") === "true",
+  serpApiKey: optional("SERPAPI_API_KEY"),
   ticketmasterApiKey: optional("TICKETMASTER_API_KEY"),
+  googlePlacesApiKey: optional("GOOGLE_PLACES_API_KEY"),
   ticketmasterCountryCode: optional("TICKETMASTER_COUNTRY_CODE")
 };
 

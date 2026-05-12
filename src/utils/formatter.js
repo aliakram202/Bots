@@ -25,6 +25,24 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;");
 }
 
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
+function htmlLink(label, url) {
+  if (!url) return "";
+  return `<a href="${escapeAttribute(url)}">${escapeHtml(label)}</a>`;
+}
+
+function googleMapsUrl(location) {
+  if (!location) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.lat},${location.lng}`)}`;
+}
+
+function locationLabel(item) {
+  return item.locationText || [item.venueName, item.cityName, item.countryCode].filter(Boolean).join(", ") || "Map location";
+}
+
 /**
  * Formats a single event into text lines
  */
@@ -32,19 +50,23 @@ function _eventLines(event) {
   const icon = categoryIcon(event.category);
   const lines = [];
   lines.push(`${icon} <b>${escapeHtml(event.name)}</b>`);
-  if (event.description) {
-    lines.push(`   ${escapeHtml(event.description)}`);
+  const place = locationLabel(event);
+  if (place) {
+    lines.push(`   📍 ${escapeHtml(place)}`);
   }
-  lines.push(`   📍 ${event.location.lat.toFixed(4)}, ${event.location.lng.toFixed(4)}`);
-  lines.push(`   🕐 ${escapeHtml(event.opening_times || "See event details")}`);
+  lines.push(`   🕐 ${escapeHtml(event.startDateTime || event.opening_times || "See event details")}`);
+  const mapsLink = htmlLink("Open in Maps", googleMapsUrl(event.location));
+  if (mapsLink) {
+    lines.push(`   🗺️ ${mapsLink}`);
+  }
   if (event.free) {
     lines.push(`   💚 FREE`);
   }
-  if (event.website) {
-    lines.push(`   🔗 ${escapeHtml(event.website)}`);
+  if (event.website && event.website !== event.ticket_link) {
+    lines.push(`   🔗 ${htmlLink("Event page", event.website)}`);
   }
   if (event.ticket_link) {
-    lines.push(`   🎫 ${escapeHtml(event.ticket_link)}`);
+    lines.push(`   🎫 ${htmlLink("Tickets", event.ticket_link)}`);
   }
   if (event.source) {
     lines.push(`   Source: ${escapeHtml(event.source)}`);
@@ -61,9 +83,12 @@ function _venueLines(venue) {
   if (venue.description) {
     lines.push(`   ${escapeHtml(venue.description)}`);
   }
-  lines.push(`   📍 ${venue.location.lat.toFixed(4)}, ${venue.location.lng.toFixed(4)}`);
+  const mapsLink = htmlLink("Open in Maps", googleMapsUrl(venue.location));
+  if (mapsLink) {
+    lines.push(`   🗺️ ${mapsLink}`);
+  }
   if (venue.website) {
-    lines.push(`   🔗 ${escapeHtml(venue.website)}`);
+    lines.push(`   🔗 ${htmlLink("Website", venue.website)}`);
   }
   return lines;
 }
@@ -187,6 +212,8 @@ function formatVenuesGrouped(venues, title = "Venues Found") {
 module.exports = {
   categoryIcon,
   escapeHtml,
+  googleMapsUrl,
+  htmlLink,
   formatEventsList,
   formatVenuesList,
   formatEventsGrouped,
