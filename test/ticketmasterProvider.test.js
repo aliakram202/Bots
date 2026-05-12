@@ -1,7 +1,11 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
-const { mapEvent } = require("../src/providers/ticketmasterProvider");
+const {
+  buildUrl,
+  mapEvent,
+  searchNearbyEvents
+} = require("../src/providers/ticketmasterProvider");
 
 test("maps Ticketmaster event data into internal event shape", () => {
   const mapped = mapEvent({
@@ -46,4 +50,45 @@ test("drops Ticketmaster events without coordinates", () => {
   const mapped = mapEvent({ id: "missing-location", name: "No location" });
 
   assert.equal(mapped, null);
+});
+
+test("builds Ticketmaster URLs with expected query parameters", () => {
+  const url = buildUrl("key123", {
+    geoPoint: "smnfdr72h",
+    radius: 20,
+    unit: "km",
+    sort: "distance,asc"
+  });
+
+  assert.equal(url.searchParams.get("apikey"), "key123");
+  assert.equal(url.searchParams.get("geoPoint"), "smnfdr72h");
+  assert.equal(url.searchParams.get("radius"), "20");
+  assert.equal(url.searchParams.get("unit"), "km");
+  assert.equal(url.searchParams.get("sort"), "distance,asc");
+});
+
+test("nearby Ticketmaster search uses geoPoint instead of latlong", async () => {
+  const originalFetch = global.fetch;
+  let requestedUrl;
+
+  global.fetch = async url => {
+    requestedUrl = url;
+    return {
+      ok: true,
+      async json() {
+        return { _embedded: { events: [] } };
+      }
+    };
+  };
+
+  try {
+    await searchNearbyEvents("key123", 33.3152, 44.3661, 20);
+
+    assert.equal(requestedUrl.searchParams.has("geoPoint"), true);
+    assert.equal(requestedUrl.searchParams.has("latlong"), false);
+    assert.equal(requestedUrl.searchParams.get("radius"), "20");
+    assert.equal(requestedUrl.searchParams.get("unit"), "km");
+  } finally {
+    global.fetch = originalFetch;
+  }
 });

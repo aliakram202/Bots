@@ -1,6 +1,8 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
+process.env.TICKETMASTER_API_KEY = "";
+
 const searchService = require("../src/utils/searchService");
 
 test("searches local events by category through fallback path", async () => {
