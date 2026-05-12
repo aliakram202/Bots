@@ -13,6 +13,7 @@ function createBot() {
   bot.command("health", ctx => handleText(ctx));
   bot.command("categories", ctx => handleText(ctx));
   bot.action(/^category:(.+)$/, ctx => handleText(ctx));
+  bot.action("nearby:help", ctx => handleText(ctx));
   bot.on("text", ctx => handleText(ctx));
   bot.on("location", ctx => handleLocation(ctx));
   bot.on(["photo", "video", "audio", "voice", "document"], ctx => handleMedia(ctx));

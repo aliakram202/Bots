@@ -40,16 +40,37 @@ async function withLiveFallback(liveSearch, fallbackSearch) {
   }
 }
 
+function applyFilters(events, options = {}) {
+  return events.filter(event => {
+    if (options.freeOnly && event.free !== true) return false;
+    if (options.ticketedOnly && !event.ticket_link) return false;
+    if (options.locationName) {
+      const haystack = [
+        event.name,
+        event.description,
+        event.region,
+        event.website,
+        event.ticket_link
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(options.locationName.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
 function localSearchByCategory(category) {
   return eventsData.filter(e => e.category === category);
 }
 
-async function searchByCategory(category) {
+async function searchByCategory(category, options = {}) {
   return withLiveFallback(
-    () => ticketmasterProvider.searchByCategory(config.ticketmasterApiKey, category, {
+    async () => applyFilters(await ticketmasterProvider.searchByCategory(config.ticketmasterApiKey, category, {
       countryCode: config.ticketmasterCountryCode
-    }),
-    () => localSearchByCategory(category)
+    }), options),
+    () => applyFilters(localSearchByCategory(category), options)
   );
 }
 
@@ -80,12 +101,12 @@ function localSearchNearbyEvents(lat, lng, radiusKm = 100) {
     .sort((a, b) => a.distance - b.distance);
 }
 
-async function searchNearbyEvents(lat, lng, radiusKm = 100) {
+async function searchNearbyEvents(lat, lng, radiusKm = 100, options = {}) {
   return withLiveFallback(
-    () => ticketmasterProvider.searchNearbyEvents(config.ticketmasterApiKey, lat, lng, radiusKm, {
+    async () => applyFilters(await ticketmasterProvider.searchNearbyEvents(config.ticketmasterApiKey, lat, lng, radiusKm, {
       countryCode: config.ticketmasterCountryCode
-    }),
-    () => localSearchNearbyEvents(lat, lng, radiusKm)
+    }), options),
+    () => applyFilters(localSearchNearbyEvents(lat, lng, radiusKm), options)
   );
 }
 
@@ -105,22 +126,22 @@ function searchNearbyVenues(lat, lng, radiusKm = 100) {
 /**
  * Full-text search across events
  */
-function localSearchEvents(query) {
+function localSearchEvents(query, options = {}) {
   const lower = query.toLowerCase();
-  return eventsData.filter(
+  return applyFilters(eventsData.filter(
     e =>
       e.name.toLowerCase().includes(lower) ||
       e.description.toLowerCase().includes(lower) ||
       e.category.toLowerCase().includes(lower)
-  );
+  ), options);
 }
 
-async function searchEvents(query) {
+async function searchEvents(query, options = {}) {
   return withLiveFallback(
-    () => ticketmasterProvider.searchEvents(config.ticketmasterApiKey, query, {
+    async () => applyFilters(await ticketmasterProvider.searchEvents(config.ticketmasterApiKey, query, {
       countryCode: config.ticketmasterCountryCode
-    }),
-    () => localSearchEvents(query)
+    }), options),
+    () => localSearchEvents(query, options)
   );
 }
 
@@ -145,30 +166,32 @@ async function search(intent, query, options = {}) {
   // Location-based search
   if (lat && lng) {
     if (intent === "nearby") {
-      return searchNearbyEvents(lat, lng);
+      return searchNearbyEvents(lat, lng, options.radiusKm || 100, options);
     }
   }
 
   // Category search
-  if (intent === "art") return searchByCategory("art");
-  if (intent === "museum") return searchByCategory("museum");
-  if (intent === "workshop") return searchByCategory("workshop");
-  if (intent === "festival") return searchByCategory("festival");
-  if (intent === "photography") return searchByCategory("photography");
-  if (intent === "cinema") return searchByCategory("cinema");
-  if (intent === "theatre") return searchByCategory("theatre");
-  if (intent === "books") return searchByCategory("books");
+  if (intent === "art") return searchByCategory("art", options);
+  if (intent === "museum") return searchByCategory("museum", options);
+  if (intent === "workshop") return searchByCategory("workshop", options);
+  if (intent === "festival") return searchByCategory("festival", options);
+  if (intent === "photography") return searchByCategory("photography", options);
+  if (intent === "cinema") return searchByCategory("cinema", options);
+  if (intent === "theatre") return searchByCategory("theatre", options);
+  if (intent === "books") return searchByCategory("books", options);
 
   // Special searches
   if (intent === "free") return searchFreeEvents();
   if (intent === "tickets") return searchTicketedEvents();
 
   // Full-text search fallback
-  return searchEvents(query);
+  return searchEvents(query, options);
 }
 
 module.exports = {
   calculateDistance,
+  applyFilters,
+  localSearchByCategory,
   searchByCategory,
   searchFreeEvents,
   searchTicketedEvents,

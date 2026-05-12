@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Telegram art assistant with deep Iraqi & Arab focus",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test": "node --test"
   },
   "keywords": [
     "telegram",

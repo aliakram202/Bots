@@ -41,8 +41,8 @@ function categoryFromEvent(event, fallback = "art") {
     .toLowerCase();
 
   if (text.includes("film") || text.includes("cinema")) return "cinema";
-  if (text.includes("theatre") || text.includes("theater") || text.includes("arts")) return "theatre";
   if (text.includes("photography")) return "photography";
+  if (text.includes("theatre") || text.includes("theater") || text.includes("arts")) return "theatre";
   if (text.includes("book") || text.includes("literature")) return "books";
   if (text.includes("festival")) return "festival";
   return fallback;

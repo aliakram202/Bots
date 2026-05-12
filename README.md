@@ -1,113 +1,113 @@
-# 🎨 Salasil Bot
+# Salasil Bot
 
-A WhatsApp bot that helps discover art events, museums, and cultural activities with a deep focus on **Iraqi & Arab art**, while providing global coverage.
+Salasil Bot is a Telegram assistant for discovering art, culture, museums, exhibitions, workshops, cinema, theatre, photography, books, and festivals, with Iraqi and Arab results prioritized when available.
+
+The bot works immediately from the local JSON dataset. If you add a Ticketmaster API key, it can also pull live event results and fall back to local data when the API is unavailable or empty.
 
 ## Features
 
-- 🌟 **Smart Intent Detection**: Understands natural language queries in English and Arabic
-- 🎨 **Art Events Discovery**: Museums, galleries, exhibitions, workshops, festivals
-- 📸 **Photography Events**: Photography exhibitions and festivals
-- 🎬 **Cinema & Film**: Movies, documentaries, film festivals
-- 🎭 **Theatre & Performance**: Stage performances, dance, ballet, opera
-- 📚 **Books & Literature**: Author talks, book launches, poetry readings
-- 📍 **Location-Based Search**: Find events near your location
-- 🔍 **Free Events Finder**: Discover free art activities
-- 🎫 **Ticket Information**: Direct links to event ticketing
-- 🌍 **Global + Local**: International events with priority to Iraqi & Arab content
-
-## Tech Stack
-
-- **whatsapp-web.js**: WhatsApp Web automation
-- **Node.js**: Runtime
-- **Natural Language Processing**: Keyword-based intent detection (Arabic & English)
-- **Haversine Formula**: Location-based proximity calculations
+- Telegram bot powered by Telegraf
+- English and Arabic keyword intent detection
+- Compound queries such as `free photography in Baghdad`
+- Location sharing for nearby events and venues within 100km
+- Inline category buttons for quick discovery
+- Optional Ticketmaster live event search
+- Safe Telegram HTML formatting for user and provider content
+- Local fallback data in `src/data/events.json` and `src/data/venues.json`
 
 ## Quick Start
 
-### Installation
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Configuration
+Create `.env` from `.env.example` and set your Telegram token:
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+BOT_NAME=Salasil Bot
+DEBUG=false
+```
 
-2. Update `.env` with your preferences
-
-### Running the Bot
+Start the bot:
 
 ```bash
 npm start
 ```
 
-On first run, a QR code will appear in the terminal. Scan it with WhatsApp to authenticate.
-
-### Development
+For development with auto-reload:
 
 ```bash
 npm run dev
 ```
 
-Uses `nodemon` for auto-reload on file changes.
+## Optional Live Events
+
+The bot runs without external event APIs. To enable live Ticketmaster results, add this to `.env`:
+
+```bash
+TICKETMASTER_API_KEY=your_ticketmaster_key_here
+TICKETMASTER_COUNTRY_CODE=IQ
+```
+
+`TICKETMASTER_COUNTRY_CODE` is optional. Use a two-letter country code like `IQ`, `JO`, `AE`, `GB`, or `US` to bias results.
+
+## Bot Commands
+
+- `/start` - show the main menu
+- `/help` - show usage help
+- `/categories` - list supported categories
+- `/health` - confirm the bot is running and show live API status
+
+You can also send natural messages like:
+
+- `modern art exhibitions`
+- `free photography in Baghdad`
+- `museam near me`
+- `عرض فني`
+- `workshops`
+
+To search nearby events, send your Telegram location.
 
 ## Project Structure
 
-```
+```text
 src/
-├── index.js                    # Bot entry point
-├── data/
-│   ├── events.json            # Event database
-│   └── venues.json            # Venue database
-├── utils/
-│   ├── searchService.js       # Core search logic
-│   ├── intentDetector.js      # Natural language intent detection
-│   └── formatter.js           # Message formatting
+├── index.js                    # Bot startup and route registration
+├── config.js                   # Environment validation
+├── data/                       # Local fallback events and venues
+├── providers/                  # Optional external event providers
+├── utils/                      # Intent detection, search, formatting
 └── bot/
-    └── handlers/
-        ├── textHandler.js     # Text message processing
-        ├── locationHandler.js # Location-based search
-        ├── mediaHandler.js    # Media handling
-        └── errorHandler.js    # Error handling
+    ├── keyboards.js            # Telegram inline/reply keyboards
+    └── handlers/               # Text, location, media, and error handlers
 ```
 
-## How to Use
+## Testing
 
-### Text Queries (Natural Language)
+Run the test suite:
 
-Send messages like:
-- "Find me modern art exhibitions" → Art events
-- "عرض فني" → Arabic queries work too
-- "Museums near me" → With optional location
-- "Free workshops" → Filter by free events
-- "Photography festivals in 2026" → Specific categories
+```bash
+npm test
+```
 
-### Location Sharing
+Smoke-check config loading:
 
-1. Send your location via WhatsApp
-2. Bot will find nearby events within 100km
-3. Results grouped by distance and region
+```bash
+node -e "require('./src/config'); console.log('config ok')"
+```
 
-### Intents Recognized
+Smoke-check bot construction without connecting to Telegram:
 
-- **Art**: exhibitions, galleries, installations, paintings, sculptures
-- **Museums**: cultural centers, heritage sites
-- **Workshops**: hands-on classes, learning events
-- **Festivals**: cultural celebrations, art fairs
-- **Photography**: photo exhibitions, photography festivals
-- **Cinema**: films, documentaries, festivals
-- **Theatre**: stage performances, dance, opera
-- **Books**: literature, author talks, readings
-- **Free Events**: budget-friendly activities
-- **Events with Tickets**: ticketed attractions
+```bash
+node -e "require('./src/index').createBot(); console.log('bot ok')"
+```
 
-## Data Structure
+## Data
 
-### Events
+Local events use this shape:
 
 ```json
 {
@@ -116,60 +116,12 @@ Send messages like:
   "category": "museum",
   "location": { "lat": 33.3128, "lng": 44.3615 },
   "region": "arab",
-  "description": "...",
+  "description": "Contemporary art collection focusing on Iraqi artists",
   "opening_times": "09:00-17:00",
-  "website": "...",
-  "ticket_link": "...",
+  "website": "https://example.com",
+  "ticket_link": "https://example.com/tickets",
   "free": false
 }
 ```
 
-### Venues
-
-```json
-{
-  "id": "ven-001",
-  "name": "Al-Mutanabbi Street Cultural Center",
-  "location": { "lat": 33.3218, "lng": 44.3638 },
-  "region": "arab",
-  "description": "...",
-  "website": "..."
-}
-```
-
-## Regions
-
-- `arab`: Iraqi and Arab events (shown first in results)
-- `international`: Global events (shown second)
-
-## Cost Analysis
-
-Assuming daily search (free tier):
-- **WhatsApp Bot**: Free (uses WhatsApp Web, no API costs)
-- **Hosting**: Free tier (Render, Railway) ~$0/month
-- **Keep-Alive**: UptimeRobot free plan = $0/month
-- **Total**: **$0/month** (entirely free tier)
-
-## Troubleshooting
-
-**Bot not responding?**
-- Check `.wwebjs_cache/` folder exists
-- Verify WhatsApp authentication completed (QR code scan)
-- Check console for errors
-
-**Missing events?**
-- Add to `src/data/events.json`
-- Use unique IDs
-- Include all required fields
-
-## Contributing
-
-Feel free to add new events, venues, or improve detection logic!
-
-## License
-
-MIT
-
----
-
-Made with ❤️ by Salasil
+Use `region: "arab"` for Iraqi and Arab content that should be shown first, and `region: "international"` for global results.

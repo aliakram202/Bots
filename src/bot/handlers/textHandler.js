@@ -1,73 +1,142 @@
-const { detectIntent } = require("../../utils/intentDetector");
+const { config } = require("../../config");
+const { detectIntent, parseQuery } = require("../../utils/intentDetector");
 const searchService = require("../../utils/searchService");
 const {
-  formatEventsGrouped,
-  formatEventsList
+  escapeHtml,
+  formatEventsGrouped
 } = require("../../utils/formatter");
+const { mainMenuKeyboard } = require("../keyboards");
 
-const WELCOME_MSG = `👋 Hi! I'm *Salasil Bot* — with a deep love for *Arabic and Iraqi art* 🌟
+const WELCOME_MSG = `Hi! I'm <b>Salasil Bot</b>, an art and culture assistant with a deep love for Arabic and Iraqi art.
 
 I help you discover:
-🎨 *Art & Galleries* - Exhibitions, museums, installations
-📸 *Photography* - Photo exhibitions and festivals
-🎬 *Cinema* - Films, documentaries, screenings
-🎭 *Theatre* - Stage performances, dance, opera
-📚 *Books* - Literature, author talks, poetry
-🎉 *Events & Festivals* - Art fairs, celebrations
-💚 *Free Events* - Budget-friendly activities
+🎨 <b>Art &amp; Galleries</b> - exhibitions, museums, installations
+📸 <b>Photography</b> - photo exhibitions and festivals
+🎬 <b>Cinema</b> - films, documentaries, screenings
+🎭 <b>Theatre</b> - stage performances, dance, opera
+📚 <b>Books</b> - literature, author talks, poetry
+💚 <b>Free Events</b> - budget-friendly activities
 
-*How to use me:*
-→ Ask naturally: "Show me modern art exhibitions"
-→ Share your location to find *nearby* events
-→ Mix Arabic & English freely! 🇮🇶🌍
+Ask naturally, try a button below, or share your location to find nearby events. Arabic and English both work.`;
 
-What would you like to explore today?`;
+const CATEGORIES_MSG = `Supported categories:
+• Museums
+• Art and galleries
+• Workshops
+• Festivals
+• Photography
+• Cinema and film
+• Theatre and performance
+• Books and literature
+• Free events
+• Ticketed events`;
 
-const REPLY_OPTS = { parse_mode: "Markdown" };
+const REPLY_OPTS = { parse_mode: "HTML" };
+
+function replyOptions(extra = {}) {
+  return { ...REPLY_OPTS, ...extra };
+}
+
+function getIncomingText(ctx) {
+  if (ctx.match?.[1]) {
+    return ctx.match[1];
+  }
+  if (ctx.callbackQuery?.data === "nearby:help") {
+    return "nearby";
+  }
+  return ctx.message?.text || "";
+}
+
+async function replyWithMenu(ctx, message) {
+  await ctx.reply(message, replyOptions(mainMenuKeyboard()));
+}
+
+function formatHealth() {
+  return [
+    "<b>Salasil health</b>",
+    "Status: running",
+    `Live event API: ${config.ticketmasterApiKey ? "enabled" : "disabled, using local data"}`,
+    `Country filter: ${escapeHtml(config.ticketmasterCountryCode || "none")}`
+  ].join("\n");
+}
 
 async function handleText(ctx) {
-  const text = ctx.message.text;
+  const text = getIncomingText(ctx);
 
-  if (text === "/start" || text.toLowerCase() === "hello") {
-    await ctx.reply(WELCOME_MSG, REPLY_OPTS);
+  if (ctx.callbackQuery) {
+    await ctx.answerCbQuery();
+  }
+
+  if (text === "/start" || text === "/help" || text.toLowerCase() === "hello") {
+    await replyWithMenu(ctx, WELCOME_MSG);
     return;
   }
 
-  const intent = detectIntent(text);
+  if (text === "/categories") {
+    await replyWithMenu(ctx, CATEGORIES_MSG);
+    return;
+  }
+
+  if (text === "/health") {
+    await ctx.reply(formatHealth(), REPLY_OPTS);
+    return;
+  }
+
+  if (text === "nearby") {
+    await ctx.reply(
+      "Share your Telegram location and I'll look for nearby events and venues within 100km.",
+      replyOptions({
+        reply_markup: {
+          keyboard: [[{ text: "Share my location", request_location: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true
+        }
+      })
+    );
+    return;
+  }
+
+  const parsed = parseQuery(text);
+  const intent = parsed.category || detectIntent(text);
+  const options = {
+    freeOnly: parsed.freeOnly,
+    ticketedOnly: parsed.ticketedOnly,
+    locationName: parsed.locationName
+  };
 
   try {
     if (intent === "museum") {
-      const results = searchService.searchByCategory("museum");
+      const results = await searchService.searchByCategory("museum", options);
       await ctx.reply(formatEventsGrouped(results, "Museums"), REPLY_OPTS);
     } else if (intent === "art") {
-      const results = searchService.searchByCategory("art");
+      const results = await searchService.searchByCategory("art", options);
       await ctx.reply(formatEventsGrouped(results, "Art Events"), REPLY_OPTS);
     } else if (intent === "workshop") {
-      const results = searchService.searchByCategory("workshop");
+      const results = await searchService.searchByCategory("workshop", options);
       await ctx.reply(formatEventsGrouped(results, "Workshops"), REPLY_OPTS);
     } else if (intent === "festival") {
-      const results = searchService.searchByCategory("festival");
+      const results = await searchService.searchByCategory("festival", options);
       await ctx.reply(formatEventsGrouped(results, "Festivals"), REPLY_OPTS);
     } else if (intent === "photography") {
-      const results = searchService.searchByCategory("photography");
+      const results = await searchService.searchByCategory("photography", options);
       await ctx.reply(formatEventsGrouped(results, "Photography Events"), REPLY_OPTS);
     } else if (intent === "cinema") {
-      const results = searchService.searchByCategory("cinema");
+      const results = await searchService.searchByCategory("cinema", options);
       await ctx.reply(formatEventsGrouped(results, "Cinema & Film"), REPLY_OPTS);
     } else if (intent === "theatre") {
-      const results = searchService.searchByCategory("theatre");
+      const results = await searchService.searchByCategory("theatre", options);
       await ctx.reply(formatEventsGrouped(results, "Theatre & Performance"), REPLY_OPTS);
     } else if (intent === "books") {
-      const results = searchService.searchByCategory("books");
+      const results = await searchService.searchByCategory("books", options);
       await ctx.reply(formatEventsGrouped(results, "Books & Literature"), REPLY_OPTS);
     } else if (intent === "free") {
-      const results = searchService.searchFreeEvents();
+      const results = await searchService.searchFreeEvents();
       await ctx.reply(formatEventsGrouped(results, "Free Events"), REPLY_OPTS);
     } else if (intent === "tickets") {
-      const results = searchService.searchTicketedEvents();
+      const results = await searchService.searchTicketedEvents();
       await ctx.reply(formatEventsGrouped(results, "Ticketed Events"), REPLY_OPTS);
     } else {
-      const results = searchService.searchEvents(text);
+      const results = await searchService.searchEvents(text, options);
       if (results.length > 0) {
         await ctx.reply(formatEventsGrouped(results, `Results for "${text}"`), REPLY_OPTS);
       } else {
@@ -83,7 +152,7 @@ async function handleText(ctx) {
     }
   } catch (error) {
     console.error("Error handling text:", error);
-    await ctx.reply("❌ Something went wrong. Please try again.");
+    await ctx.reply("Something went wrong. Please try again.");
   }
 }
 

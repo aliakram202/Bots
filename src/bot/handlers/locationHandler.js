@@ -1,13 +1,13 @@
 const searchService = require("../../utils/searchService");
 const { formatEventsList, formatVenuesList } = require("../../utils/formatter");
 
-const REPLY_OPTS = { parse_mode: "Markdown" };
+const REPLY_OPTS = { parse_mode: "HTML" };
 
 async function handleLocation(ctx) {
   try {
     const { latitude, longitude } = ctx.message.location;
 
-    const nearbyEvents = searchService.searchNearbyEvents(latitude, longitude);
+    const nearbyEvents = await searchService.searchNearbyEvents(latitude, longitude);
     const nearbyVenues = searchService.searchNearbyVenues(latitude, longitude);
 
     if (nearbyEvents.length === 0 && nearbyVenues.length === 0) {
@@ -18,7 +18,7 @@ async function handleLocation(ctx) {
       return;
     }
 
-    let response = `📍 *Events Near You* (Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)})\n\n`;
+    let response = `📍 <b>Events Near You</b> (Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)})\n\n`;
 
     if (nearbyEvents.length > 0) {
       response += formatEventsList(nearbyEvents, `${nearbyEvents.length} Events Found`);
