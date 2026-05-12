@@ -18,26 +18,36 @@ function categoryIcon(category) {
   return icons[category] || "✨";
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 /**
  * Formats a single event into text lines
  */
 function _eventLines(event) {
   const icon = categoryIcon(event.category);
   const lines = [];
-  lines.push(`${icon} *${event.name}*`);
+  lines.push(`${icon} <b>${escapeHtml(event.name)}</b>`);
   if (event.description) {
-    lines.push(`   ${event.description}`);
+    lines.push(`   ${escapeHtml(event.description)}`);
   }
   lines.push(`   📍 ${event.location.lat.toFixed(4)}, ${event.location.lng.toFixed(4)}`);
-  lines.push(`   🕐 ${event.opening_times}`);
+  lines.push(`   🕐 ${escapeHtml(event.opening_times || "See event details")}`);
   if (event.free) {
     lines.push(`   💚 FREE`);
   }
   if (event.website) {
-    lines.push(`   🔗 ${event.website}`);
+    lines.push(`   🔗 ${escapeHtml(event.website)}`);
   }
   if (event.ticket_link) {
-    lines.push(`   🎫 ${event.ticket_link}`);
+    lines.push(`   🎫 ${escapeHtml(event.ticket_link)}`);
+  }
+  if (event.source) {
+    lines.push(`   Source: ${escapeHtml(event.source)}`);
   }
   return lines;
 }
@@ -47,13 +57,13 @@ function _eventLines(event) {
  */
 function _venueLines(venue) {
   const lines = [];
-  lines.push(`📍 *${venue.name}*`);
+  lines.push(`📍 <b>${escapeHtml(venue.name)}</b>`);
   if (venue.description) {
-    lines.push(`   ${venue.description}`);
+    lines.push(`   ${escapeHtml(venue.description)}`);
   }
   lines.push(`   📍 ${venue.location.lat.toFixed(4)}, ${venue.location.lng.toFixed(4)}`);
   if (venue.website) {
-    lines.push(`   🔗 ${venue.website}`);
+    lines.push(`   🔗 ${escapeHtml(venue.website)}`);
   }
   return lines;
 }
@@ -66,7 +76,7 @@ function formatEventsList(events, title = "Events Found") {
     return "❌ No events found matching your criteria.";
   }
 
-  const lines = [`🎨 *${title}* (${events.length})\n`];
+  const lines = [`🎨 <b>${escapeHtml(title)}</b> (${events.length})\n`];
 
   events.forEach(event => {
     lines.push(..._eventLines(event));
@@ -84,7 +94,7 @@ function formatVenuesList(venues, title = "Venues Found") {
     return "❌ No venues found matching your criteria.";
   }
 
-  const lines = [`📍 *${title}* (${venues.length})\n`];
+  const lines = [`📍 <b>${escapeHtml(title)}</b> (${venues.length})\n`];
 
   venues.forEach(venue => {
     lines.push(..._venueLines(venue));
@@ -111,11 +121,11 @@ function formatEventsGrouped(events, title = "Events Found") {
     return formatEventsList(events, title);
   }
 
-  const lines = [`🎨 *${title}*\n`];
+  const lines = [`🎨 <b>${escapeHtml(title)}</b>\n`];
 
   // Arab section (prioritized)
   if (arab.length > 0) {
-    lines.push("🌟 *Iraqi & Arab* 🌟\n");
+    lines.push("🌟 <b>Iraqi &amp; Arab</b> 🌟\n");
     arab.forEach(event => {
       lines.push(..._eventLines(event));
       lines.push("");
@@ -124,7 +134,7 @@ function formatEventsGrouped(events, title = "Events Found") {
 
   // International section
   if (international.length > 0) {
-    lines.push("\n🌍 *International*\n");
+    lines.push("\n🌍 <b>International</b>\n");
     international.forEach(event => {
       lines.push(..._eventLines(event));
       lines.push("");
@@ -151,11 +161,11 @@ function formatVenuesGrouped(venues, title = "Venues Found") {
     return formatVenuesList(venues, title);
   }
 
-  const lines = [`📍 *${title}*\n`];
+  const lines = [`📍 <b>${escapeHtml(title)}</b>\n`];
 
   // Arab section (prioritized)
   if (arab.length > 0) {
-    lines.push("🌟 *Iraqi & Arab* 🌟\n");
+    lines.push("🌟 <b>Iraqi &amp; Arab</b> 🌟\n");
     arab.forEach(venue => {
       lines.push(..._venueLines(venue));
       lines.push("");
@@ -164,7 +174,7 @@ function formatVenuesGrouped(venues, title = "Venues Found") {
 
   // International section
   if (international.length > 0) {
-    lines.push("\n🌍 *International*\n");
+    lines.push("\n🌍 <b>International</b>\n");
     international.forEach(venue => {
       lines.push(..._venueLines(venue));
       lines.push("");
@@ -176,6 +186,7 @@ function formatVenuesGrouped(venues, title = "Venues Found") {
 
 module.exports = {
   categoryIcon,
+  escapeHtml,
   formatEventsList,
   formatVenuesList,
   formatEventsGrouped,

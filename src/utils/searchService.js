@@ -2,7 +2,8 @@
 
 const eventsData = require("../data/events.json");
 const venuesData = require("../data/venues.json");
-const { detectIntent } = require("./intentDetector");
+const { config } = require("../config");
+const ticketmasterProvider = require("../providers/ticketmasterProvider");
 
 /**
  * Haversine formula to calculate distance between two coordinates
@@ -25,28 +26,51 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 /**
  * Searches events by category
  */
-function searchByCategory(category) {
+async function withLiveFallback(liveSearch, fallbackSearch) {
+  if (!config.ticketmasterApiKey) {
+    return fallbackSearch();
+  }
+
+  try {
+    const liveResults = await liveSearch();
+    return liveResults.length > 0 ? liveResults : fallbackSearch();
+  } catch (error) {
+    console.warn(`Live event search failed; using local fallback: ${error.message}`);
+    return fallbackSearch();
+  }
+}
+
+function localSearchByCategory(category) {
   return eventsData.filter(e => e.category === category);
+}
+
+async function searchByCategory(category) {
+  return withLiveFallback(
+    () => ticketmasterProvider.searchByCategory(config.ticketmasterApiKey, category, {
+      countryCode: config.ticketmasterCountryCode
+    }),
+    () => localSearchByCategory(category)
+  );
 }
 
 /**
  * Searches events by free/paid status
  */
-function searchFreeEvents() {
+async function searchFreeEvents() {
   return eventsData.filter(e => e.free === true);
 }
 
 /**
  * Searches events with ticket links
  */
-function searchTicketedEvents() {
+async function searchTicketedEvents() {
   return eventsData.filter(e => e.ticket_link);
 }
 
 /**
  * Searches nearby events by location (within 100km)
  */
-function searchNearbyEvents(lat, lng, radiusKm = 100) {
+function localSearchNearbyEvents(lat, lng, radiusKm = 100) {
   return eventsData
     .map(event => ({
       ...event,
@@ -54,6 +78,15 @@ function searchNearbyEvents(lat, lng, radiusKm = 100) {
     }))
     .filter(e => e.distance <= radiusKm)
     .sort((a, b) => a.distance - b.distance);
+}
+
+async function searchNearbyEvents(lat, lng, radiusKm = 100) {
+  return withLiveFallback(
+    () => ticketmasterProvider.searchNearbyEvents(config.ticketmasterApiKey, lat, lng, radiusKm, {
+      countryCode: config.ticketmasterCountryCode
+    }),
+    () => localSearchNearbyEvents(lat, lng, radiusKm)
+  );
 }
 
 /**
@@ -72,13 +105,22 @@ function searchNearbyVenues(lat, lng, radiusKm = 100) {
 /**
  * Full-text search across events
  */
-function searchEvents(query) {
+function localSearchEvents(query) {
   const lower = query.toLowerCase();
   return eventsData.filter(
     e =>
       e.name.toLowerCase().includes(lower) ||
       e.description.toLowerCase().includes(lower) ||
       e.category.toLowerCase().includes(lower)
+  );
+}
+
+async function searchEvents(query) {
+  return withLiveFallback(
+    () => ticketmasterProvider.searchEvents(config.ticketmasterApiKey, query, {
+      countryCode: config.ticketmasterCountryCode
+    }),
+    () => localSearchEvents(query)
   );
 }
 
@@ -97,7 +139,7 @@ function searchVenues(query) {
 /**
  * Route to appropriate search based on intent and parameters
  */
-function search(intent, query, options = {}) {
+async function search(intent, query, options = {}) {
   const { lat, lng } = options;
 
   // Location-based search
@@ -131,8 +173,10 @@ module.exports = {
   searchFreeEvents,
   searchTicketedEvents,
   searchNearbyEvents,
+  localSearchNearbyEvents,
   searchNearbyVenues,
   searchEvents,
+  localSearchEvents,
   searchVenues,
   search
 };
