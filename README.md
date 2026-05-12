@@ -9,7 +9,7 @@ The bot works immediately from the local JSON dataset. If you add a Ticketmaster
 - Telegram bot powered by Telegraf
 - English and Arabic keyword intent detection
 - Compound queries such as `free photography in Baghdad`
-- Location sharing for nearby events and venues within 100km
+- Location sharing for nearby events and venues within 20km, with a 50km expansion option
 - Inline category buttons for quick discovery
 - Optional Ticketmaster live event search
 - Safe Telegram HTML formatting for user and provider content
@@ -43,6 +43,10 @@ For development with auto-reload:
 npm run dev
 ```
 
+## Full Functionality Reference
+
+See [BOT_FUNCTIONALITY.md](BOT_FUNCTIONALITY.md) for the full command list, callbacks, location flow, env vars, and future roadmap.
+
 ## Optional Live Events
 
 The bot runs without external event APIs. To enable live Ticketmaster results, add this to `.env`:
@@ -52,7 +56,7 @@ TICKETMASTER_API_KEY=your_ticketmaster_key_here
 TICKETMASTER_COUNTRY_CODE=IQ
 ```
 
-`TICKETMASTER_COUNTRY_CODE` is optional. Use a two-letter country code like `IQ`, `JO`, `AE`, `GB`, or `US` to bias results.
+Use the Ticketmaster Developer `Consumer Key` as `TICKETMASTER_API_KEY`. `TICKETMASTER_COUNTRY_CODE` is optional; use a two-letter country code like `IQ`, `JO`, `AE`, `GB`, or `US` to bias results.
 
 ## Bot Commands
 
@@ -69,7 +73,7 @@ You can also send natural messages like:
 - `عرض فني`
 - `workshops`
 
-To search nearby events, send your Telegram location.
+To search nearby events, send your Telegram location. The bot searches within 20km first and then offers to expand to 50km.
 
 ## Project Structure
 

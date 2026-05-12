@@ -1,7 +1,7 @@
 const { Telegraf } = require("telegraf");
 const { config } = require("./config");
 const { handleText } = require("./bot/handlers/textHandler");
-const { handleLocation } = require("./bot/handlers/locationHandler");
+const { handleLocation, handleNearbyRadius } = require("./bot/handlers/locationHandler");
 const { handleMedia } = require("./bot/handlers/mediaHandler");
 const { handleError } = require("./bot/handlers/errorHandler");
 
@@ -14,6 +14,7 @@ function createBot() {
   bot.command("categories", ctx => handleText(ctx));
   bot.action(/^category:(.+)$/, ctx => handleText(ctx));
   bot.action("nearby:help", ctx => handleText(ctx));
+  bot.action(/^nearby:(20|50):(-?\d+(?:\.\d+)?):(-?\d+(?:\.\d+)?)$/, ctx => handleNearbyRadius(ctx));
   bot.on("text", ctx => handleText(ctx));
   bot.on("location", ctx => handleLocation(ctx));
   bot.on(["photo", "video", "audio", "voice", "document"], ctx => handleMedia(ctx));

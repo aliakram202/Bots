@@ -1,3 +1,5 @@
+const geohash = require("ngeohash");
+
 const BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json";
 
 const CATEGORY_KEYWORDS = {
@@ -125,7 +127,7 @@ async function searchEvents(apiKey, query, options = {}) {
 
 async function searchNearbyEvents(apiKey, lat, lng, radiusKm = 100, options = {}) {
   return fetchEvents(apiKey, {
-    latlong: `${lat},${lng}`,
+    geoPoint: geohash.encode(Number(lat), Number(lng), 9),
     radius: radiusKm,
     unit: "km",
     countryCode: options.countryCode,
@@ -137,5 +139,6 @@ module.exports = {
   searchByCategory,
   searchEvents,
   searchNearbyEvents,
+  buildUrl,
   mapEvent
 };
