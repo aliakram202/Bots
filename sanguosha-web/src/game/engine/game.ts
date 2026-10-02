@@ -15,6 +15,7 @@ import type {
 } from './types';
 import { mainFlow } from './flows';
 import { validateAnswer, defaultAnswer } from './legal';
+import { applyDebug, type DebugAction } from './debug';
 
 export class GameOverSignal extends Error {
   constructor() {
@@ -174,6 +175,18 @@ export class Game {
   setAutoUse(pid: string, value: boolean) {
     this.autoUse[pid] = value;
     this.commands.push({ seq: this.commands.length + 1, player: '__pref__', answer: { pid, value } as unknown as Answer });
+  }
+
+  /** Apply a developer debug edit (debug rooms only). Returns an error message or null. */
+  debug(action: DebugAction): string | null {
+    try {
+      const text = applyDebug(this, action);
+      this.log({ type: 'debug', text });
+      this.commands.push({ seq: this.commands.length + 1, player: '__debug__', answer: action as unknown as Answer });
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
   }
 
   /** Players who still have to answer the pending decision. */

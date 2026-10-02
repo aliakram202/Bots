@@ -25,9 +25,14 @@ export const engine = {
   replay(config: GameConfig, commands: { player: string; answer: Answer }[], autoUse?: Record<string, boolean>): Game {
     const g = new Game(config);
     for (const c of commands) {
+      if (c.player === '__debug__') {
+        const err = g.debug(c.answer as never);
+        if (err) throw new Error(`replay debug diverged: ${err}`);
+        continue;
+      }
       if (c.player === '__pref__') {
         const a = c.answer as unknown as { pid: string; value: boolean };
-        g.autoUse[a.pid] = a.value;
+        g.setAutoUse(a.pid, a.value);
         continue;
       }
       const err = g.dispatch(c.player, c.answer);
